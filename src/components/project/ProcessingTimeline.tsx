@@ -45,7 +45,7 @@ export function ProcessingTimeline({ status }: ProcessingTimelineProps) {
         {STEPS.map((step, i) => {
           const state =
             isFailed && i === currentIdx ? 'failed'
-            : i < currentIdx ? 'done'
+            : i < currentIdx || (status === 'completed' && i === currentIdx) ? 'done'
             : i === currentIdx ? 'active'
             : 'pending'
 
