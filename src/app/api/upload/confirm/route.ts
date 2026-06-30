@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { tasks } from '@trigger.dev/sdk/v3'
+import { processAudioTask } from '@/trigger/processAudio'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,18 +13,28 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createServiceClient()
 
-    const { error } = await supabase
+    // Mark upload completed and fetch the row to get projectId + storagePath
+    const { data: upload, error } = await supabase
       .from('audio_uploads')
       .update({
         upload_status: 'completed',
         upload_confirmed_at: new Date().toISOString(),
       })
       .eq('id', uploadId)
+      .select('id, project_id, storage_path')
+      .single()
 
-    if (error) {
-      console.error('DB confirm upload failed:', error.message, error.code)
+    if (error || !upload) {
+      console.error('DB confirm upload failed:', error?.message, error?.code)
       return NextResponse.json({ error: 'Failed to confirm upload' }, { status: 500 })
     }
+
+    // Trigger the processing pipeline
+    await tasks.trigger<typeof processAudioTask>('process-audio', {
+      projectId: upload.project_id,
+      uploadId: upload.id,
+      storagePath: upload.storage_path,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err) {
