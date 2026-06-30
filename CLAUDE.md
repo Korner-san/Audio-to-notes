@@ -1,5 +1,13 @@
 # AudiotoNotes — Project Rules
 
+## Git & Deployment
+
+**Rule: After every code change, always commit and push to GitHub.**
+
+- Vercel auto-deploys on every push to `master`, so pushing = deploying.
+- Never leave changes as local-only edits. Commit immediately after making a fix.
+- Use a short, descriptive commit message.
+
 ## Environment Variables
 
 **Rule: All env vars live in Vercel. Never manage them locally.**

@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
         audio_filename: filename,
       })
 
-    // If DB fails (e.g. schema not yet applied), still return the upload URL
     if (dbError) {
-      console.warn('DB insert skipped (schema may not be applied yet):', dbError.message)
+      console.error('DB project insert failed:', dbError.message, dbError.code)
+      return NextResponse.json({ error: 'Failed to create project record' }, { status: 500 })
     }
 
     return NextResponse.json({
