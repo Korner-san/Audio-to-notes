@@ -10,13 +10,12 @@
 
 ## Environment Variables
 
-**Rule: All env vars live in Vercel. Never manage them locally.**
+**Rule: All env vars live in Vercel. NEVER touch any env file.**
 
-- `.env.example` is the only env file in this repo. It is documentation only.
-- `.env.local` is intentionally absent. Do not create it.
-- Do not ask the user to set up local env vars. Assume every variable in `.env.example` is already configured in the Vercel project dashboard.
+- There is NO `.env.example`, NO `.env.local`, NO `.env` — nothing like that. Do not create, edit, or reference any env file ever.
+- Do not ask the user to set up local env vars.
 - Never hardcode secrets, keys, or URLs. Always use `process.env.VAR_NAME`.
-- If a new env var is needed: add it to `.env.example` with a comment, and tell the user to add it in Vercel → Project → Settings → Environment Variables.
+- If a new env var is needed: tell the user the variable name and where to get the value, and say "add it in Vercel → Project → Settings → Environment Variables." That is all.
 
 ## Stack
 
