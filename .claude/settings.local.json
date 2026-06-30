@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Claude_Code_Remote__add_repo",
+      "Bash(git clone *)",
+      "Read(//c/Users/Acer/AppData/Local/Temp/**)"
+    ]
+  }
+}
