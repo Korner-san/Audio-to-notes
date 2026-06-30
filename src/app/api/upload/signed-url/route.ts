@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create upload record' }, { status: 500 })
     }
 
+    console.log(`[upload:signed-url] file="${filename}" size=${size} projectId=${projectId} uploadId=${uploadId}`)
     return NextResponse.json({
       signedUrl: data.signedUrl,
       storagePath,

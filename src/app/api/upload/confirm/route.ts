@@ -31,11 +31,12 @@ export async function POST(req: NextRequest) {
 
     // Trigger the processing pipeline
     try {
-      await tasks.trigger<typeof processAudioTask>('process-audio', {
+      const handle = await tasks.trigger<typeof processAudioTask>('process-audio', {
         projectId: upload.project_id,
         uploadId: upload.id,
         storagePath: upload.storage_path,
       })
+      console.log(`[upload:confirm] uploadId=${uploadId} projectId=${upload.project_id} path=${upload.storage_path} triggerRunId=${handle.id}`)
     } catch (triggerErr) {
       console.error('Trigger.dev task dispatch failed:', triggerErr)
       return NextResponse.json({ error: 'Failed to queue processing job' }, { status: 500 })

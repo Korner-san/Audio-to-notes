@@ -49,6 +49,17 @@
 - `src/lib/supabase/server.ts` — server client (uses publishable key or service role key)
 - Never import `createServiceClient` in client components or `'use client'` files.
 
+## Logging
+
+**Rule: Always log key user-experience steps with the filename and relevant IDs.**
+
+Every API route that touches the upload or processing flow must emit a `console.log` at each meaningful step so Vercel logs are readable during debugging. Required log points:
+- `signed-url`: filename, size, projectId, uploadId created
+- `confirm`: uploadId received, projectId resolved, Trigger.dev task dispatched
+- `processAudio` task: task started (filename/projectId), each status transition, completion or error
+
+Log format: one line per event, include filename or projectId so logs can be correlated. Use `console.error` for failures (already returns 500). Never log secrets or full file contents.
+
 ## Processing pipeline (current state)
 
 The Python ML worker (Demucs → Basic-pitch → music21) is **not yet connected**.
