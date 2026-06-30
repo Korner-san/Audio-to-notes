@@ -12,9 +12,6 @@ export async function POST(req: NextRequest) {
     const bucket = process.env.STORAGE_BUCKET_AUDIO ?? 'audio-raw'
     const supabase = await createServiceClient()
 
-    // Ensure anonymous session context — sign in as service role doesn't need user session
-    // Path: audio-raw/uploads/{timestamp}-{filename}
-    const ext = filename.split('.').pop() ?? 'bin'
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
     const storagePath = `uploads/${Date.now()}-${safeName}`
 
@@ -27,27 +24,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error?.message ?? 'Failed to create upload URL' }, { status: 500 })
     }
 
-    // Create project record
+    // Create project row
     const projectId = crypto.randomUUID()
-    const { error: dbError } = await supabase
+    const { error: projectError } = await supabase
       .from('projects')
       .insert({
         id: projectId,
-        // No user_id for anonymous MVP — we'll wire auth later
         title: filename.replace(/\.[^.]+$/, ''),
         status: 'processing',
         audio_filename: filename,
       })
 
-    if (dbError) {
-      console.error('DB project insert failed:', dbError.message, dbError.code)
+    if (projectError) {
+      console.error('DB project insert failed:', projectError.message, projectError.code)
       return NextResponse.json({ error: 'Failed to create project record' }, { status: 500 })
+    }
+
+    // Create audio_uploads row — status starts as 'pending' until client confirms the file landed
+    const uploadId = crypto.randomUUID()
+    const { error: uploadError } = await supabase
+      .from('audio_uploads')
+      .insert({
+        id: uploadId,
+        project_id: projectId,
+        original_filename: filename,
+        file_size_bytes: size,
+        mime_type: mimeType,
+        storage_path: storagePath,
+        storage_bucket: bucket,
+        upload_status: 'pending',
+      })
+
+    if (uploadError) {
+      console.error('DB audio_uploads insert failed:', uploadError.message, uploadError.code)
+      return NextResponse.json({ error: 'Failed to create upload record' }, { status: 500 })
     }
 
     return NextResponse.json({
       signedUrl: data.signedUrl,
       storagePath,
       projectId,
+      uploadId,
     })
   } catch (err) {
     console.error('signed-url error:', err)

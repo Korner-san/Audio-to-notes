@@ -68,14 +68,14 @@ export function DropZone() {
         await supabase.auth.signInAnonymously()
       }
 
-      // 2. Get signed upload URL from API
+      // 2. Get signed upload URL from API (also creates project + audio_uploads rows)
       const res = await fetch('/api/upload/signed-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: file.name, size: file.size, mimeType: file.type }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to get upload URL')
-      const { signedUrl, storagePath, projectId } = await res.json()
+      const { signedUrl, projectId, uploadId } = await res.json()
 
       // 3. Upload directly to Supabase Storage with progress tracking
       await new Promise<void>((resolve, reject) => {
@@ -90,10 +90,17 @@ export function DropZone() {
         xhr.send(file)
       })
 
+      // 4. Confirm upload so audio_uploads row is marked completed
+      await fetch('/api/upload/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId }),
+      })
+
       setProgress(100)
       setPhase('done')
 
-      // 4. Redirect to processing page
+      // 5. Redirect to processing page
       setTimeout(() => router.push(`/projects/${projectId}`), 600)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
