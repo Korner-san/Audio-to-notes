@@ -7,6 +7,7 @@
 - Vercel auto-deploys on every push to `master`, so pushing = deploying.
 - Never leave changes as local-only edits. Commit immediately after making a fix.
 - Use a short, descriptive commit message.
+- Never assume deployment hasn't finished. The user always waits for deployment before reporting issues. Never push empty commits or suggest redeploying as a fix.
 
 ## Environment Variables
 
