@@ -1,5 +1,6 @@
 import { task, wait, logger } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
+import ws from "ws";
 
 interface ProcessAudioPayload {
   projectId: string;
@@ -10,7 +11,8 @@ interface ProcessAudioPayload {
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { realtime: { transport: ws } }
   );
 }
 
