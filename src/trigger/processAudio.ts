@@ -21,9 +21,16 @@ export const processAudioTask = task({
 
   run: async (payload: ProcessAudioPayload) => {
     const { projectId, uploadId, storagePath } = payload;
-    const supabase = getSupabase();
 
-    logger.log("Starting audio processing", { projectId, storagePath });
+    logger.log("Task started", {
+      projectId,
+      storagePath,
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+
+    const supabase = getSupabase();
+    logger.log("Supabase client created — inserting processing_jobs row");
 
     // ── 1. Create processing_jobs row ─────────────────────────────────────────
     const { data: job, error: jobError } = await supabase
