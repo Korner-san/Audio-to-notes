@@ -90,12 +90,16 @@ export function DropZone() {
         xhr.send(file)
       })
 
-      // 4. Confirm upload so audio_uploads row is marked completed
-      await fetch('/api/upload/confirm', {
+      // 4. Confirm upload so audio_uploads row is marked completed and job is queued
+      const confirmRes = await fetch('/api/upload/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uploadId }),
       })
+      if (!confirmRes.ok) {
+        const { error } = await confirmRes.json().catch(() => ({ error: 'Failed to start processing' }))
+        throw new Error(error ?? 'Failed to start processing')
+      }
 
       setProgress(100)
       setPhase('done')
