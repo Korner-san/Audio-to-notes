@@ -24,6 +24,9 @@ export const env = {
     musicxml: optionalEnv('STORAGE_BUCKET_MUSICXML', 'musicxml-files'),
     exports: optionalEnv('STORAGE_BUCKET_EXPORTS', 'exports'),
   },
+  audioshake: {
+    apiKey: optionalEnv('AUDIOSHAKE_API_KEY'),
+  },
   features: {
     useAudioshake: optionalEnv('FEATURE_USE_AUDIOSHAKE', 'false') === 'true',
     noteEditor: optionalEnv('FEATURE_NOTE_EDITOR', 'true') === 'true',

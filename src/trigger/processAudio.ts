@@ -1,6 +1,7 @@
 import { task, wait, logger } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 import ws from "ws";
+import { processAudioShakeStemSeparation } from "@/lib/audioshake";
 
 interface ProcessAudioPayload {
   projectId: string;
@@ -66,10 +67,48 @@ export const processAudioTask = task({
       logger.log("Status updated", { status });
     }
 
-    // ── 2. Stem separation (Demucs) ───────────────────────────────────────────
+    // ── 2. Stem separation (AudioShake) ──────────────────────────────────────
     await setStatus("separating");
-    // TODO: download storagePath from audio-raw, run Demucs, write stems to audio-stems
-    await wait.for({ seconds: 5 });
+
+    const stemsBucket = process.env.STORAGE_BUCKET_STEMS ?? "audio-stems";
+    const stemResults = await processAudioShakeStemSeparation(
+      projectId,
+      uploadId,
+      storagePath,
+      stemsBucket,
+      (msg) => logger.log(msg)
+    );
+
+    logger.log("Stem separation complete", {
+      stemsCount: stemResults.length,
+      stems: stemResults.map((s) => ({ model: s.model, size: s.fileSizeBytes })),
+    });
+
+    // Insert audio_stems rows for each separated stem
+    for (const stem of stemResults) {
+      const { error: stemError } = await supabase
+        .from("audio_stems")
+        .insert({
+          project_id: projectId,
+          processing_job_id: jobId,
+          stem_type: stem.model,
+          storage_path: stem.storagePath,
+          storage_bucket: stem.storageBucket,
+          file_size_bytes: stem.fileSizeBytes,
+          status: "completed",
+          separation_model: "audioshake",
+        });
+
+      if (stemError) {
+        logger.error(
+          `Failed to insert stem ${stem.model}: ${stemError.message}`
+        );
+        throw new Error(
+          `Failed to insert audio_stems row for ${stem.model}: ${stemError.message}`
+        );
+      }
+    }
+
     await setStatus("transcribing", {
       separation_done_at: new Date().toISOString(),
     });
